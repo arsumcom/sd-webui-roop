@@ -8,6 +8,8 @@ from modules.processing import (
 )
 from modules.shared import cmd_opts, opts, state
 from PIL import Image
+import base64
+import io
 import glob
 from modules.face_restoration import FaceRestoration
 
@@ -27,6 +29,10 @@ def get_models():
     models = [x for x in models if x.endswith(".onnx") or x.endswith(".pth")]
     return models
 
+def convert_base64_to_image(base64_img_str):
+    base64_img_bytes = base64.b64decode(base64_img_str)
+    base64_img = Image.open(io.BytesIO(base64_img_bytes))
+    return base64_img
 
 class FaceSwapScript(scripts.Script):
     def title(self):
@@ -144,7 +150,10 @@ class FaceSwapScript(scripts.Script):
         swap_in_source,
         swap_in_generated,
     ):
-        self.source = img
+        if type(img) == str:
+            self.source = convert_base64_to_image(img)
+        else:
+            self.source = img
         self.face_restorer_name = face_restorer_name
         self.upscaler_scale = upscaler_scale
         self.upscaler_visibility = upscaler_visibility
